@@ -1,0 +1,36 @@
+{% extends 'bootstrap/base.html' %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+
+{% block content %}
+{% include "header.html" %}
+
+<!-- Page Header-->
+<header class="masthead" style="background-image: url({{ url_for('static', filename='assets/img/bck_img.png')}})">
+    <div class="container position-relative px-4 px-lg-5">
+        <div class="row gx-4 gx-lg-5 justify-content-center">
+            <div class="col-md-10 col-lg-8 col-xl-7 text-center">
+                <div class="post-heading">
+                    <h1>Login</h1>
+                    <h2 class="subheading">Welcome Back!</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container px-4 px-lg-5">
+    <div class="row x-4 gx-lg-5 justify-content-center">
+        <div class="col-md-10 col-lg-8 col-xl-7">
+            {% for mesg in get_flashed_messages() %}
+            <p class="flash_msg">{{ mesg }}</p>
+            {% endfor %}
+            {{ wtf.quick_form(form, novalidate=True, button_map={"submit": "primary"}) }}
+        </div>
+    </div>
+</div>
+
+
+
+{% include "footer.html" %}
+{% endblock %}
