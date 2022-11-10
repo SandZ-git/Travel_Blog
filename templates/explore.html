@@ -1,3 +1,8 @@
+{% extends 'bootstrap/base.html' %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block content %}
+
 {% include "header.html" %}
 <!-- Page Header-->
 <header class="masthead" style="background-image: url({{ url_for('static', filename='assets/img/bck_img.png')}})">
@@ -13,6 +18,49 @@
     </div>
 </header>
 <!-- Main Content-->
+<div class="container px-4 px-lg-5 expl-filter">
+    <div class="row gx-4 gx-lg-5 justify-content-md-center" style="text-align: center;">
+            {{ wtf.quick_form(form, novalidate=True, form_type="inline",
+            button_map={"submit": "default"}) }}
+        </div>
+    <div class="row gx-4 gx-lg-5 ">
+        <div class="dropdown show">
+                <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+                   data-bs-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">
+                    Sort by
+                </a>
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                    <a class="dropdown-item" href="#">Newest to Oldest</a>
+                    <a class="dropdown-item" href="#">Oldest to Newest</a>
+                </div>
+            </div>
+    </div>
+    <div class="row gx-4 gx-lg-5 justify-content-center">
+        <div class="col-md-10 col-lg-8 col-xl-7">
+            <!-- Post preview-->
+            {% for post in all_posts %}
+            <div class="post-preview-s card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('show_post', post_id=post.id) }}">
+                            <h2 class="post-title text-uppercase">{{ post.title }}</h2>
+                            <h3 class="post-subtitle">{{ post.subtitle }}</h3>
+                        </a>
+                        <p class="card-date">{{ post.date.strftime('%B %d, %Y') }} <br> {{ post.country.name }}</p>
+                    </div>
+                    <hr class="my-4"/>
+                    <p class="card-text">{{ (post.body[:100] + '...')|safe }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+
 
 <!-- Footer-->
 {% include "footer.html" %}
+
+{% endblock %}

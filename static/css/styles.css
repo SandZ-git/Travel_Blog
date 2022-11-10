@@ -11246,7 +11246,15 @@ header.masthead .site-heading .h1 {
   top: -90px;
   z-index: 1;
   margin-bottom: 35px;
-  padding: 35px;
+  padding: 25px;
+}
+
+.post-preview-s {
+  background-color: #fff
+  position: absolute;
+  z-index: 1;
+  margin-bottom: 25px;
+  padding: 17px;
 }
 
 .post-title {
@@ -11303,6 +11311,11 @@ header.masthead .site-heading .h1 {
 .commentText p {
     margin:0;
 }
+
+.expl-filter {
+   padding-bottom: 15px;
+}
+
 
 @media (min-width: 992px) {
   .post-preview > a > .post-title {

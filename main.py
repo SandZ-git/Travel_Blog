@@ -4,16 +4,15 @@ from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-from sqlalchemy import Column, Integer, DateTime, desc, asc
+from sqlalchemy import Column, Integer, DateTime, desc, asc, or_, join
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
-from forms import CreatePostForm, RegisterForm, LoginForm, CommentForm
+from forms import CreatePostForm, RegisterForm, LoginForm, CommentForm, SearchForm
 from flask_gravatar import Gravatar
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import date, timedelta
 import pycountry
 import os
 from werkzeug.utils import secure_filename
-
 
 # posts = requests.get("https://api.npoint.io/c31c07e83376e3a912b9").json()
 
@@ -199,7 +198,6 @@ def contact():
 
 @app.route("/post/<int:post_id>", methods=["GET", "POST"])
 def show_post(post_id):
-
     requested_post = BlogPost.query.get(post_id)
     print(requested_post.image)
     post_comments = Comment.query.filter_by(post_id=post_id).order_by(desc(Comment.date))
@@ -215,14 +213,12 @@ def show_post(post_id):
             comment_author=current_user,
             parent_post=requested_post,
             date=today_date
-            )
+        )
 
         db.session.add(new_comment)
         db.session.commit()
     return render_template("post.html", post=requested_post, current_year=current_year, form=form,
-                               current_user=current_user, comments=post_comments)
-
-
+                           current_user=current_user, comments=post_comments)
 
 
 @app.route("/new-post", methods=["GET", "POST"])
@@ -295,7 +291,23 @@ def edit_post(post_id):
 
 @app.route('/explore', methods=["GET", "POST"])
 def explore():
-    return render_template("explore.html", current_year=current_year)
+    posts = BlogPost.query.order_by(desc(BlogPost.date)).all()
+    print(posts)
+    form = SearchForm()
+    if form.validate_on_submit():
+        searched = form.searched.data
+        posts = BlogPost.query.join(Country, BlogPost.country_id == Country.id).filter(
+            or_(BlogPost.title.like('%' + searched + '%'), BlogPost.subtitle.like('%' + searched + '%'),
+                BlogPost.body.like('%' + searched + '%'), Country.name.like('%' + searched + '%')))
+    return render_template("explore.html", form=form, all_posts=posts, current_user=current_user)
+
+
+@app.route('/search', methods=["POST"])
+def search():
+    form = SearchForm()
+    if form.validate_on_submit():
+        test = form.searched.data
+    return render_template("explore.html", form=form, current_user=current_user, current_year=current_year)
 
 
 if __name__ == "__main__":
