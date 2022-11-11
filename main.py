@@ -17,6 +17,7 @@ from werkzeug.utils import secure_filename
 # posts = requests.get("https://api.npoint.io/c31c07e83376e3a912b9").json()
 
 UPLOAD_FOLDER = "static/uploads"
+ROWS_PER_PAGE = 4
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
@@ -38,7 +39,9 @@ def load_user(user_id):
 
 
 # Connect to DB
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///travel-blog.db'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///travel-blog.db'
+# to create specific db user and grant privileges
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:admin@localhost/travel-blog'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -119,7 +122,7 @@ class Comment(db.Model):
 
 @app.route('/')
 def home():
-    posts = BlogPost.query.order_by(desc(BlogPost.date)).all()
+    posts = BlogPost.query.order_by(desc(BlogPost.date)).limit(3).all()
     return render_template("index.html", current_year=current_year, all_posts=posts, current_user=current_user)
 
 
@@ -291,20 +294,23 @@ def edit_post(post_id):
 
 @app.route('/explore', methods=["GET", "POST"])
 def explore():
-    posts = BlogPost.query.order_by(desc(BlogPost.date)).all()
+    # Set the pagination configuration
+    page = request.args.get('page', 1, type=int)
+
+    posts = BlogPost.query.order_by(desc(BlogPost.date)).paginate(page=page, per_page=ROWS_PER_PAGE)
     form = SearchForm()
     order = SortForm()
     if form.validate_on_submit():
         searched = form.searched.data
         posts = BlogPost.query.join(Country, BlogPost.country_id == Country.id).filter(
-            or_(BlogPost.title.like('%' + searched + '%'), BlogPost.subtitle.like('%' + searched + '%'),
-                BlogPost.body.like('%' + searched + '%'), Country.name.like('%' + searched + '%')))
+            or_(BlogPost.title.ilike('%' + searched + '%'), BlogPost.subtitle.ilike('%' + searched + '%'),
+                BlogPost.body.ilike('%' + searched + '%'), Country.name.ilike('%' + searched + '%'))).paginate(page=page, per_page=ROWS_PER_PAGE)
     if order.validate_on_submit():
         order_dir = order.sort_type.data
         if order_dir == 'asc':
-            posts = BlogPost.query.order_by(asc(BlogPost.date)).all()
+            posts = BlogPost.query.order_by(asc(BlogPost.date)).paginate(page=page, per_page=ROWS_PER_PAGE)
         else:
-            posts = BlogPost.query.order_by(desc(BlogPost.date)).all()
+            posts = BlogPost.query.order_by(desc(BlogPost.date)).paginate(page=page, per_page=ROWS_PER_PAGE)
     return render_template("explore.html", form=form, all_posts=posts, current_user=current_user, order=order)
 
 

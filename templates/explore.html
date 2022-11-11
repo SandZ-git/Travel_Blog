@@ -32,7 +32,7 @@
     <div class="row gx-4 gx-lg-5 justify-content-center">
         <div class="col-md-10 col-lg-8 col-xl-7">
             <!-- Post preview-->
-            {% for post in all_posts %}
+            {% for post in all_posts.items %}
             <div class="post-preview-s card">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
@@ -47,6 +47,46 @@
                 </div>
             </div>
             {% endfor %}
+
+            <div>
+                    <!-- Pagination Links-->
+            <div class="text-center">
+                <a href="{{ url_for('explore', page=all_posts.prev_num) }}"
+                   class="btn btn-outline-dark
+       {% if all_posts.page == 1 %}disabled{% endif %}">
+                    &laquo;
+                </a>
+                <!-- Loop through the number of pages to display a link for each-->
+                {% for page_num in all_posts.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                {% if page_num %}
+                <!-- Check for the active page and set the link to "Active"-->
+                {% if all_posts.page == page_num %}
+                <a href="{{ url_for('explore', page=page_num) }}"
+                   class="btn btn-dark">
+                    {{ page_num }}
+                </a>
+                {% else %}
+                <a href="{{ url_for('explore', page=page_num) }}"
+                   class="btn btn-outline-dark">
+                    {{ page_num }}
+                </a>
+                {% endif %}
+                {% else %}
+                ...
+                {% endif %}
+                {% endfor %}
+                <a href="{{ url_for('explore', page=all_posts.next_num) }}"
+                   class="btn btn-outline-dark
+       {% if all_posts.page == all_posts.pages %} disabled{% endif %}">
+                    &raquo;
+                </a>
+            </div>
+            <p class="text-center mt-3">
+                Showing page {{ all_posts.page }} of {{ all_posts.pages }}
+            </p>
+            </div>
+
+
         </div>
     </div>
 
