@@ -11316,6 +11316,9 @@ header.masthead .site-heading .h1 {
    padding-bottom: 15px;
 }
 
+a:hover {
+   text-decoration: none;
+}
 
 @media (min-width: 992px) {
   .post-preview > a > .post-title {

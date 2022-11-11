@@ -4,6 +4,7 @@ from wtforms.validators import DataRequired, URL
 from flask_wtf.file import FileField, FileAllowed
 from flask_ckeditor import CKEditorField
 
+
 # WTForms
 
 
@@ -35,5 +36,10 @@ class CommentForm(FlaskForm):
 
 
 class SearchForm(FlaskForm):
-    searched = StringField("Searched", validators=[DataRequired()])
+    searched = StringField("Searched")
     submit = SubmitField("Search")
+
+
+class SortForm(FlaskForm):
+    sort_type = SelectField('Sort by', choices=[('desc', '↓ Newest to Oldest'), ('asc', '↑ Oldest to Newest')])
+    submit = SubmitField("Sort")

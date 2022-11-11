@@ -6,7 +6,7 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, Integer, DateTime, desc, asc, or_, join
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
-from forms import CreatePostForm, RegisterForm, LoginForm, CommentForm, SearchForm
+from forms import CreatePostForm, RegisterForm, LoginForm, CommentForm, SearchForm, SortForm
 from flask_gravatar import Gravatar
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import date, timedelta
@@ -292,22 +292,20 @@ def edit_post(post_id):
 @app.route('/explore', methods=["GET", "POST"])
 def explore():
     posts = BlogPost.query.order_by(desc(BlogPost.date)).all()
-    print(posts)
     form = SearchForm()
+    order = SortForm()
     if form.validate_on_submit():
         searched = form.searched.data
         posts = BlogPost.query.join(Country, BlogPost.country_id == Country.id).filter(
             or_(BlogPost.title.like('%' + searched + '%'), BlogPost.subtitle.like('%' + searched + '%'),
                 BlogPost.body.like('%' + searched + '%'), Country.name.like('%' + searched + '%')))
-    return render_template("explore.html", form=form, all_posts=posts, current_user=current_user)
-
-
-@app.route('/search', methods=["POST"])
-def search():
-    form = SearchForm()
-    if form.validate_on_submit():
-        test = form.searched.data
-    return render_template("explore.html", form=form, current_user=current_user, current_year=current_year)
+    if order.validate_on_submit():
+        order_dir = order.sort_type.data
+        if order_dir == 'asc':
+            posts = BlogPost.query.order_by(asc(BlogPost.date)).all()
+        else:
+            posts = BlogPost.query.order_by(desc(BlogPost.date)).all()
+    return render_template("explore.html", form=form, all_posts=posts, current_user=current_user, order=order)
 
 
 if __name__ == "__main__":
