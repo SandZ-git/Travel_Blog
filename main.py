@@ -18,9 +18,10 @@ from werkzeug.utils import secure_filename
 
 UPLOAD_FOLDER = "static/uploads"
 ROWS_PER_PAGE = 4
+DB_PASSWORD = 'travel-blog'
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
+app.config['SECRET_KEY'] = 'GkFA1qh8UA5IHLlS5xDN8mIC81DxqRA8'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=15)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ckeditor = CKEditor(app)
@@ -40,8 +41,7 @@ def load_user(user_id):
 
 # Connect to DB
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///travel-blog.db'
-# to create specific db user and grant privileges
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:admin@localhost/travel-blog'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://tbuser:' + DB_PASSWORD + '@localhost/travel-blog'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -202,7 +202,6 @@ def contact():
 @app.route("/post/<int:post_id>", methods=["GET", "POST"])
 def show_post(post_id):
     requested_post = BlogPost.query.get(post_id)
-    print(requested_post.image)
     post_comments = Comment.query.filter_by(post_id=post_id).order_by(desc(Comment.date))
     form = CommentForm()
 
@@ -312,6 +311,14 @@ def explore():
         else:
             posts = BlogPost.query.order_by(desc(BlogPost.date)).paginate(page=page, per_page=ROWS_PER_PAGE)
     return render_template("explore.html", form=form, all_posts=posts, current_user=current_user, order=order)
+
+
+@app.route("/delete/<int:post_id>")
+def delete_post(post_id):
+    post_to_delete = BlogPost.query.get(post_id)
+    db.session.delete(post_to_delete)
+    db.session.commit()
+    return redirect(url_for('home'))
 
 
 if __name__ == "__main__":
