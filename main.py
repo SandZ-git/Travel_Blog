@@ -18,10 +18,10 @@ from werkzeug.utils import secure_filename
 
 UPLOAD_FOLDER = "static/uploads"
 ROWS_PER_PAGE = 4
-DB_PASSWORD = 'travel-blog'
+
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'GkFA1qh8UA5IHLlS5xDN8mIC81DxqRA8'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=15)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ckeditor = CKEditor(app)
@@ -41,7 +41,7 @@ def load_user(user_id):
 
 # Connect to DB
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///travel-blog.db'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://tbuser:' + DB_PASSWORD + '@localhost/travel-blog'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///travel-blog.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
