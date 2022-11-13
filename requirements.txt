@@ -57,3 +57,5 @@ yarg==0.1.9
 zict==2.0.0
 zope.event==4.5.0
 itsdangerous==2.0.1
+Werkzeug==2.0.0
+
