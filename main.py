@@ -185,6 +185,12 @@ def logout():
     return redirect(url_for('home'))
 
 
+@app.route('/user')
+@login_required
+def user():
+    return render_template("user.html", date=current_year, current_user=current_user)
+
+
 @app.route('/about')
 def about():
     return render_template("about.html", date=current_year)
