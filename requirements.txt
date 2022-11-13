@@ -69,12 +69,10 @@ WTForms==2.3.3
 pip==21.2.4
 requests==2.24.0
 pycountry==22.3.5
-certifi==2020.6.20
 chardet==3.0.4
 charset-normalizer==2.1.1
 psycopg2-binary==2.9.5
 python-dateutil==2.8.2
-pytz==2022.6
 setuptools==58.1.0
 six==1.16.0
 urllib3==1.25.10
