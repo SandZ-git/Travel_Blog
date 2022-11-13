@@ -108,16 +108,16 @@ class Comment(db.Model):
 
 
 # only required once, when creating DB.
-db.create_all()
+# db.create_all()
 
 # only once, to populate countries
-for country in pycountry.countries:
-    new_country = Country(
-        code=country.alpha_2,
-        name=country.name
-    )
-    db.session.add(new_country)
-    db.session.commit()
+# for country in pycountry.countries:
+#     new_country = Country(
+#         code=country.alpha_2,
+#         name=country.name
+#     )
+#     db.session.add(new_country)
+#     db.session.commit()
 
 
 @app.route('/')
