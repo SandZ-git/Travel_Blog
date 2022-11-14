@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, flash, request
+from flask import Flask, render_template, redirect, url_for, flash, request, abort
 from flask_ckeditor import CKEditor
 from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
@@ -13,6 +13,8 @@ from datetime import date, timedelta
 import pycountry
 import os
 from werkzeug.utils import secure_filename
+from functools import wraps
+
 
 # posts = requests.get("https://api.npoint.io/c31c07e83376e3a912b9").json()
 
@@ -21,7 +23,7 @@ ROWS_PER_PAGE = 4
 
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'GkFA1qh8UA5IHLlS5xDN8mIC81DxqRA8')
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=15)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ckeditor = CKEditor(app)
@@ -41,7 +43,7 @@ def load_user(user_id):
 
 # Connect to DB
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///travel-blog.db'
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///travel-blog.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://tbuser:travel-blog@localhost/travel-blog')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -118,6 +120,18 @@ class Comment(db.Model):
 #     )
 #     db.session.add(new_country)
 #     db.session.commit()
+
+
+# admin-only decorator
+def admin_only(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # If id is not 1 then return abort with 403 error
+        if current_user.id != 1:
+            return abort(403)
+        # Otherwise continue with the route function
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 @app.route('/')
@@ -325,6 +339,15 @@ def delete_post(post_id):
     db.session.delete(post_to_delete)
     db.session.commit()
     return redirect(url_for('home'))
+
+
+@app.route("/admin-delete/<int:post_id>")
+@admin_only
+def admin_delete(post_id):
+    post_to_delete = BlogPost.query.get(post_id)
+    db.session.delete(post_to_delete)
+    db.session.commit()
+    return redirect(url_for('explore'))
 
 
 if __name__ == "__main__":

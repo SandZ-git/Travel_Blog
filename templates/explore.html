@@ -34,6 +34,9 @@
             <!-- Post preview-->
             {% for post in all_posts.items %}
             <div class="post-preview-s card">
+                {% if current_user.id == 1: %}
+                <a style="padding-left: 95%" href="{{url_for('admin_delete', post_id=post.id) }}">✘</a>
+                {% endif %}
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <a href="{{ url_for('show_post', post_id=post.id) }}">
