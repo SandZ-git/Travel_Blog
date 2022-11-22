@@ -276,6 +276,7 @@ def add_new_post():
 
 @app.route("/edit-post/<int:post_id>", methods=["GET", "POST"])
 def edit_post(post_id):
+    is_edit = True
     post = BlogPost.query.get(post_id)
     post_country = Country.query.filter_by(id=post.country.id).first()
 
@@ -308,7 +309,7 @@ def edit_post(post_id):
         db.session.commit()
         return redirect(url_for("show_post", post_id=post.id))
 
-    return render_template("new-edit-post.html", form=edit_form, current_user=current_user)
+    return render_template("new-edit-post.html", form=edit_form, current_user=current_user, is_edit=is_edit)
 
 
 @app.route('/explore', methods=["GET", "POST"])
