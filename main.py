@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, flash, request, abort
+from flask import Flask, render_template, redirect, url_for, flash, request, abort, jsonify
 from flask_ckeditor import CKEditor
 from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
@@ -14,6 +14,7 @@ import pycountry
 import os
 from werkzeug.utils import secure_filename
 from functools import wraps
+from flask_restful import Resource, Api, reqparse
 
 
 # posts = requests.get("https://api.npoint.io/c31c07e83376e3a912b9").json()
@@ -23,6 +24,7 @@ ROWS_PER_PAGE = 4
 
 
 app = Flask(__name__)
+api = Api(app)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'GkFA1qh8UA5IHLlS5xDN8mIC81DxqRA8')
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=15)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -70,6 +72,16 @@ class BlogPost(db.Model):
     author = relationship("User", back_populates="posts")
     comments = relationship("Comment", back_populates="parent_post")
     country = relationship("Country", back_populates="posts")
+
+    def to_dict(self):
+        dictionary = {}
+        # Loop through each column in the data record
+        for column in self.__table__.columns:
+            # Create a new dictionary entry;
+            # where the key is the name of the column
+            # and the value is the value of the column
+            dictionary[column.name] = getattr(self, column.name)
+        return dictionary
 
 
 class Country(db.Model):
@@ -351,5 +363,86 @@ def admin_delete(post_id):
     return redirect(url_for('explore'))
 
 
+# #####------- RESTful API -------######
+
+
+class BlogPostsAPI(Resource):
+    def get(self):
+        posts = BlogPost.query.order_by(desc(BlogPost.date)).all()
+        return jsonify(posts=[post.to_dict() for post in posts])
+
+    def post(self):
+        filename = ''
+        file = request.files.get("image")
+        if file is not None:
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+        new_post = BlogPost(
+            title=request.form.get("title"),
+            subtitle=request.form.get("subtitle"),
+            body=request.form.get("body"),
+            country=Country.query.filter_by(id=request.form.get("country_id")).first(),
+            author=User.query.filter_by(id=request.form.get("author_id")).first(),
+            date=today_date,
+            image=filename,
+        )
+        db.session.add(new_post)
+        db.session.commit()
+        return jsonify(response={"success": "Successfully added the new blog post."})
+
+
+class BlogPostAPI(Resource):
+    def get(self, post_id):
+        post = BlogPost.query.get(post_id)
+        if post:
+            response = jsonify(post=post.to_dict())
+            response.status_code = 200
+            return response
+        else:
+            response = jsonify(error={"Not Found": "Post with id:{} doesn't exist.".format(post_id)})
+            response.status_code = 404
+            return response
+
+    def delete(self, post_id):
+        post_to_delete = BlogPost.query.get(post_id)
+        if post_to_delete:
+            db.session.delete(post_to_delete)
+            db.session.commit()
+            response = jsonify(response={"success": "Successfully deleted the blog post from the database."})
+            response.status_code = 200
+            return response
+        else:
+            response = jsonify(error={"Not Found": "Post with id:{} doesn't exist.".format(post_id)})
+            response.status_code = 404
+            return response
+
+    def put(self, post_id):
+        post = db.session.query(BlogPost).get(post_id)
+        filename = ''
+        file = request.files.get("image")
+        if file is not None and os.path.isfile(str(file)):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        if post:
+            post.title = request.form.get("title"),
+            post.subtitle = request.form.get("subtitle"),
+            post.body = request.form.get("body"),
+            # post.country = Country.query.filter_by(id=request.form.get("country_id")).first(),
+            post.image = filename
+            db.session.commit()
+            response = jsonify(response={"success": "Successfully updated the blog post."})
+            response.status_code = 200
+            return response
+        else:
+            response = jsonify(error={"Not Found": "Post with id:{} doesn't exist.".format(post_id)})
+            response.status_code = 404
+            return response
+
+
+api.add_resource(BlogPostsAPI, '/api/post')
+api.add_resource(BlogPostAPI, '/api/post/<post_id>')
+
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
