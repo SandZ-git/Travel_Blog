@@ -44,7 +44,7 @@ def load_user(user_id):
 
 
 # Connect to DB
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///travel-blog.db'
+# app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///travel-blog.db')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://tbuser:travel-blog@localhost/travel-blog')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
@@ -372,24 +372,20 @@ class BlogPostsAPI(Resource):
         return jsonify(posts=[post.to_dict() for post in posts])
 
     def post(self):
-        filename = ''
-        file = request.files.get("image")
-        if file is not None:
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        json_data = request.get_json(force=True)
 
         new_post = BlogPost(
-            title=request.form.get("title"),
-            subtitle=request.form.get("subtitle"),
-            body=request.form.get("body"),
-            country=Country.query.filter_by(id=request.form.get("country_id")).first(),
-            author=User.query.filter_by(id=request.form.get("author_id")).first(),
+            title=json_data['title'],
+            subtitle=json_data['subtitle'],
+            body=json_data['body'],
+            country=Country.query.filter_by(id=json_data['country']).first(),
+            author=User.query.filter_by(id=json_data['author']).first(),
             date=today_date,
-            image=filename,
+            image='currently_not_supported_in_API',
         )
         db.session.add(new_post)
         db.session.commit()
-        return jsonify(response={"success": "Successfully added the new blog post."})
+        return "Successfully added the new blog post."
 
 
 class BlogPostAPI(Resource):
@@ -445,4 +441,4 @@ api.add_resource(BlogPostAPI, '/api/post/<post_id>')
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
